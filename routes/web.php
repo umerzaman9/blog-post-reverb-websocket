@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Post;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,4 +30,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
+
+
+Route::get('/posts/{post}', function (Post $post) {
+    return view('posts.show', compact('post'));
+})->name('posts.show');
+
+
+Route::get('/posts/{post}/comments', [CommentController::class, 'index']); // guests OK
+Route::middleware('auth')->group(function () {
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store']);
+});
