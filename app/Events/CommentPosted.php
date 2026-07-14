@@ -33,7 +33,7 @@ class CommentPosted implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('posts.' . $this->comment->post_id),
+            new Channel('posts.' . $this->comment->postId),
         ];
     }
 

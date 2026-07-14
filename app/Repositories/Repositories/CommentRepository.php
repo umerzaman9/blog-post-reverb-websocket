@@ -6,6 +6,7 @@ use App\Events\CommentPosted;
 use App\Models\Comment;
 use App\Repositories\Interfaces\CommentInterface;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class CommentRepository implements CommentInterface
 {
@@ -38,7 +39,13 @@ class CommentRepository implements CommentInterface
 
         $comment->load('user:id,name');
 
-        broadcast(new CommentPosted($comment))->toOthers();
+
+        try {
+            broadcast(new CommentPosted($comment))->toOthers();
+            Log::info('Broadcast sent successfully', ['comment_id' => $comment->id]);
+        } catch (\Throwable $e) {
+            Log::error('Broadcast failed', ['error' => $e->getMessage()]);
+        }
 
         return response()->json([
             'success' => true,
