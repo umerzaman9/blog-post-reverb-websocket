@@ -21,7 +21,7 @@ A small Laravel 10 blog application built to demonstrate real-time comment broad
 | Backend | Laravel 10, PHP 8.2 |
 | Real-time | Laravel Reverb (WebSocket server), Laravel Echo, Pusher JS protocol |
 | Auth | Laravel Breeze (Blade stack) |
-| Frontend | Blade, Bootstrap 5, vanilla JS |
+| Frontend | Blade, Bootstrap 5, JQuery |
 | Notifications | PHPFlasher + Toastr |
 | Database | MySQL |
 
