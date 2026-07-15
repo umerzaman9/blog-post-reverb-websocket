@@ -133,49 +133,6 @@ Then visit your configured domain (e.g. `http://websocket-reverb.test`) or `http
 6. `resources/js/comments.js` (loaded via Echo) listens for `.comment.posted` and appends the new comment to the DOM instantly — for every tab/user watching that post, without a page refresh.
 7. `->toOthers()` combined with the `X-Socket-Id` header (sent manually since `fetch()` doesn't attach it automatically like `axios` does) ensures the comment's author doesn't see a duplicate — their own comment renders immediately from the direct API response instead.
 
-## Project Structure (App-Specific)
-
-```
-app/
-  Events/
-    CommentPosted.php          # Broadcast event for new comments
-  Http/
-    Controllers/
-      PostController.php       # Post listing + single post view
-      Api/CommentController.php # Comment endpoints (thin, delegates to repo)
-    Requests/
-      StoreCommentRequest.php  # Validates comment body
-    Resources/
-      CommentResource.php      # Formats comment JSON output
-  Repositories/
-    Interfaces/
-      CommentInterface.php
-    Repositories/
-      CommentRepository.php    # All comment business logic + responses
-  Models/
-    Post.php
-    Comment.php
-
-database/
-  factories/
-    PostFactory.php
-  seeders/
-    PostSeeder.php
-
-resources/
-  js/
-    app.js                     # Entry point, imports bootstrap + comments
-    bootstrap.js                # Axios + Echo/Reverb setup
-    comments.js                  # Fetch comments, listen on Echo channel, submit new comments
-  views/
-    posts/
-      index.blade.php           # All posts listing (clickable cards)
-      show.blade.php             # Single post + live comments
-
-routes/
-  web.php                       # Post pages + comment endpoints (session auth, not routes/api.php)
-```
-
 ## Notes on Design Decisions
 
 - **Comment routes live in `routes/web.php`, not `routes/api.php`** — despite returning JSON, they rely on Laravel's session-based auth and CSRF protection (via the `web` middleware group), which `routes/api.php` does not provide by default.
