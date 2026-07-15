@@ -3,58 +3,85 @@
 namespace App\Repositories\Repositories;
 
 use App\Events\CommentPosted;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Repositories\Interfaces\CommentInterface;
+use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class CommentRepository implements CommentInterface
 {
-    public function getByPost($postId)
+    /**
+     * Get all comments belonging to a post.
+     *
+     * @param int $postId
+     * @return mixed
+     */
+    public function getByPost(int $postId)
     {
-        $comments = Comment::with('user:id,name')
-            ->where('postId', $postId)
-            ->latest()
-            ->get()
-            ->map(fn($comment) => [
-                'id'         => $comment->id,
-                'body'       => $comment->body,
-                'author'     => $comment->user->name,
-                'created_at' => $comment->created_at->diffForHumans(),
-            ]);
+        try {
+            DB::beginTransaction();
 
-        return response()->json([
-            'success' => true,
-            'data'    => $comments,
-        ], JsonResponse::HTTP_OK);
+            $comments = Comment::with('user')->where('postId', $postId)->latest()->get();
+            if (!$comments) {
+                throw new Exception('comment not found');
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'response' => [
+                    'status' => true,
+                    'data'   => [
+                        'comments' => CommentResource::collection($comments),
+                    ],
+                ],
+            ], JsonResponse::HTTP_OK);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
-    public function store($data)
+    /**
+     * Store a new comment and broadcast it in real time.
+     *
+     * @param int $userId, int $postId, array $data
+     * @return mixed
+     */
+    public function store(int $userId, int $postId, array $data)
     {
-        $comment = Comment::create([
-            'postId' => $data['postId'],
-            'userId' => $data['userId'],
-            'body'    => $data['body'],
-        ]);
-
-        $comment->load('user:id,name');
-
-
         try {
-            broadcast(new CommentPosted($comment))->toOthers();
-            Log::info('Broadcast sent successfully', ['comment_id' => $comment->id]);
-        } catch (\Throwable $e) {
-            Log::error('Broadcast failed', ['error' => $e->getMessage()]);
-        }
+            DB::beginTransaction();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id'         => $comment->id,
-                'body'       => $comment->body,
-                'author'     => $comment->user->name,
-                'created_at' => $comment->created_at->diffForHumans(),
-            ],
-        ], JsonResponse::HTTP_CREATED);
+            $comment = Comment::create([
+                'postId' => $postId,
+                'userId' => $userId,
+                'body'   => $data['body'],
+            ]);
+
+            $comment->load('user');
+
+            broadcast(new CommentPosted($comment))->toOthers();
+            Log::info('Broadcast sent successfully!', ['commentId' => $comment->id]);
+
+            DB::commit();
+
+            return response()->json([
+                'response' => [
+                    'status' => true,
+                    'data'   => [
+                        'comment' => new CommentResource($comment),
+                    ],
+                ],
+            ], JsonResponse::HTTP_CREATED);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error('Broadcast failed: ', ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 }

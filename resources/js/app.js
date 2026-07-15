@@ -1,4 +1,5 @@
 import './bootstrap';
+import './comments';
 
 import Alpine from 'alpinejs';
 

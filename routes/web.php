@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Post;
 use Illuminate\Support\Facades\Route;
@@ -16,9 +17,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -32,13 +30,12 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__ . '/auth.php';
 
+//display blogs
+Route::get('/', [PostController::class, 'index'])->name('posts.index');
+Route::get('/posts/{post}', [PostController::class, 'showPosts'])->name('posts.show');
 
-Route::get('/posts/{post}', function (Post $post) {
-    return view('posts.show', compact('post'));
-})->name('posts.show');
-
-
-Route::get('/posts/{post}/comments', [CommentController::class, 'index']); // guests OK
+//comment routes
+Route::get('/posts/{post}/comments', [CommentController::class, 'index']);
 Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/comments', [CommentController::class, 'store']);
 });

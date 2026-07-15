@@ -3,34 +3,39 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCommentRequest;
 use App\Repositories\Interfaces\CommentInterface;
 use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
     protected $commentRepo;
+
     public function __construct(CommentInterface $commentRepo)
     {
         $this->commentRepo = $commentRepo;
     }
 
-    // GET /api/posts/{post}/comments — public, guests included
+    /**
+     * Return comments belonging to a specific post — public, guests included.
+     *
+     * @param int $post
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(int $post)
     {
         return $this->commentRepo->getByPost($post);
     }
 
-    // POST /api/posts/{post}/comments — auth required
-    public function store(Request $request, int $post)
+    /**
+     * Store a new comment for the authenticated user.
+     *
+     * @param \App\Http\Requests\StoreCommentRequest $request
+     * @param int $post
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function store(StoreCommentRequest $request, int $post)
     {
-        $validated = $request->validate([
-            'body' => ['required', 'string', 'max:1000'],
-        ]);
-
-        return $this->commentRepo->store([
-            'postId' => $post,
-            'userId' => $request->user()->id,
-            'body'    => $validated['body'],
-        ]);
+        return $this->commentRepo->store(auth()->id(), $post, $request->validated());
     }
 }

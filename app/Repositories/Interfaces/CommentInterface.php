@@ -4,6 +4,7 @@ namespace App\Repositories\Interfaces;
 
 interface CommentInterface
 {
-    public function getByPost($postId);
-    public function store($data);
+    public function getByPost(int $postId);
+
+    public function store(int $userId, int $postId, array $data);
 }
