@@ -131,13 +131,14 @@ Then visit your configured domain (e.g. `http://websocket-reverb.test`) or `http
 4. `CommentPosted` broadcasts on a **public** channel (`posts.{postId}`) — no channel authorization needed, so guests can listen too.
 5. Laravel Reverb pushes the event to every connected client subscribed to that channel.
 6. `resources/js/comments.js` (loaded via Echo) listens for `.comment.posted` and appends the new comment to the DOM instantly — for every tab/user watching that post, without a page refresh.
-7. `->toOthers()` combined with the `X-Socket-Id` header (sent manually since `fetch()` doesn't attach it automatically like `axios` does) ensures the comment's author doesn't see a duplicate — their own comment renders immediately from the direct API response instead.
+7. `->toOthers()` combined with the `X-Socket-Id` header (sent manually since `$.ajax()` doesn't attach it automatically like `axios` does) ensures the comment's author doesn't see a duplicate — their own comment renders immediately from the direct API response instead.
 
 ## Notes on Design Decisions
 
 - **Comment routes live in `routes/web.php`, not `routes/api.php`** — despite returning JSON, they rely on Laravel's session-based auth and CSRF protection (via the `web` middleware group), which `routes/api.php` does not provide by default.
 - **Public (not private) broadcast channel** — required so guests can watch comments live without needing to authenticate against a channel.
-- **`QUEUE_CONNECTION=sync`** — broadcasting events are dispatched through the queue by default; without a queue worker running, `sync` processes them inline immediately, which is simplest for local development.
+- **`CommentPosted` Event implements `ShouldBroadcastNow` interface (not `ShouldBroadcast`)** — this skips the queue entirely and broadcasts synchronously within the request, regardless of `QUEUE_CONNECTION`. Combined with `QUEUE_CONNECTION=sync`, this guarantees the comment broadcast fires immediately with no dependency on a queue worker ever running, which was the root cause of earlier "comments only show after refresh" bugs during development.
+
 
 ## Known Limitations
 
