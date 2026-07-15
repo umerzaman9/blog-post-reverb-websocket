@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
+
+    toastr.options = { positionClass: 'toast-bottom-right' };
+
     const postEl = document.getElementById('post-data');
     if (!postEl) return;
 
@@ -21,35 +24,50 @@ document.addEventListener('DOMContentLoaded', function () {
         commentsEl.prepend(div);
     }
 
-    // Load existing comments — works for guests too
-    fetch(`/posts/${postId}/comments`)
-        .then(res => res.json())
-        .then(res => res.response.data.comments.forEach(renderComment));
+    // Load existing comments
+    $.ajax({
+        url: `/posts/${postId}/comments`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (res) {
+            res.response.data.comments.reverse().forEach(renderComment);
+        },
+        error: function (xhr) {
+            console.error(xhr);
+            toastr.error('Something went wrong');
+        }
+    });
 
     // Listen for new comments in real time — public channel, guests included
     window.Echo.channel(`posts.${postId}`)
         .listen('.comment.posted', (e) => renderComment(e));
 
-    // Only authenticated users have the comment form present in the DOM
+    // create a comment
     if (commentForm) {
         commentForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const body = document.getElementById('comment-body').value;
 
-            fetch(`/posts/${postId}/comments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'X-Socket-Id': window.Echo.socketId(), // to prevent seeing duplicate comment of sender
+            $.ajax({
+                url: `/posts/${postId}/comments`,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    body: $('#comment-body').val()
                 },
-                body: JSON.stringify({ body }),
-            })
-                .then(res => res.json())
-                .then(res => {
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Socket-Id': window.Echo.socketId(), // to prevent self broadcast
+                },
+                success: function (res) {
                     renderComment(res.response.data.comment);
-                    document.getElementById('comment-body').value = '';
-                });
+                    $('#comment-body').val('');
+                    toastr.success('Comment posted successfully!');
+                },
+                error: function (xhr) {
+                    console.error(xhr);
+                    toastr.error('Something went wrong');
+                }
+            });
         });
     }
 });

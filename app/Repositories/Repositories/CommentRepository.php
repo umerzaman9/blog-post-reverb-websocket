@@ -7,6 +7,7 @@ use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Repositories\Interfaces\CommentInterface;
 use Exception;
+use Flasher\Laravel\Facade\Flasher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,14 +24,7 @@ class CommentRepository implements CommentInterface
     public function getByPost(int $postId)
     {
         try {
-            DB::beginTransaction();
-
             $comments = Comment::with('user')->where('postId', $postId)->latest()->get();
-            if (!$comments) {
-                throw new Exception('comment not found');
-            }
-
-            DB::commit();
 
             return response()->json([
                 'response' => [
@@ -41,7 +35,6 @@ class CommentRepository implements CommentInterface
                 ],
             ], JsonResponse::HTTP_OK);
         } catch (Throwable $e) {
-            DB::rollBack();
             throw $e;
         }
     }
@@ -63,10 +56,8 @@ class CommentRepository implements CommentInterface
                 'body'   => $data['body'],
             ]);
 
-            $comment->load('user');
-
             broadcast(new CommentPosted($comment))->toOthers();
-            Log::info('Broadcast sent successfully!', ['commentId' => $comment->id]);
+            Log::info('Broadcast sent successfully!', ['commentId' => $comment->id, 'comment' => $comment]);
 
             DB::commit();
 

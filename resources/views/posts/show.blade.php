@@ -8,8 +8,10 @@
 
     <title>{{ $post->title }}</title>
 
-    <!-- Bootstrap CSS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <!-- Vite (Echo / bootstrap.js / comments.js) -->
     @vite(['resources/js/app.js'])
@@ -70,7 +72,7 @@
                 <div id="post-data" data-post-id="{{ $post->id }}"></div>
 
                 <h2 class="h5 mb-3">Comments</h2>
-                <div id="comments" class="d-flex flex-column gap-2"></div>
+                <div id="comments" class="d-flex flex-column gap-2 mb-3"></div>
 
             </div>
         </div>

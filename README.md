@@ -1,66 +1,189 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Websocket Reverb — Real-Time Blog Comments
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A small Laravel 10 blog application built to demonstrate real-time comment broadcasting using **Laravel Reverb** and **Laravel Echo**. Guests and authenticated users alike can watch comments appear live on a post page, with no page refresh required.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Blog posts (seeded via factory — no CRUD UI)
+- Real-time comments on each post, broadcast over WebSockets via Laravel Reverb
+- Guests can view posts and comments live; only authenticated users can post comments
+- Authentication via Laravel Breeze (Blade, session-based)
+- Repository pattern — controllers stay thin, all business logic and formatted responses live in repositories
+- API Resources for consistent JSON formatting
+- Form Requests for validation
+- Toast notifications via PHPFlasher (Toastr adapter)
+- Bootstrap 5 UI (no Tailwind/Vue)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 10, PHP 8.2 |
+| Real-time | Laravel Reverb (WebSocket server), Laravel Echo, Pusher JS protocol |
+| Auth | Laravel Breeze (Blade stack) |
+| Frontend | Blade, Bootstrap 5, vanilla JS |
+| Notifications | PHPFlasher + Toastr |
+| Database | MySQL |
 
-## Learning Laravel
+## Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.2+
+- Composer
+- Node.js + npm
+- MySQL
+- Laragon (or any local dev environment capable of serving a custom `.test`/`.local` domain)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Installation
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+# Clone and install PHP dependencies
+composer install
 
-## Laravel Sponsors
+# Install JS dependencies
+npm install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+# Copy environment file and generate app key
+cp .env.example .env
+php artisan key:generate
+```
 
-### Premium Partners
+Update `.env` with your database credentials and Reverb settings:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database_name
+DB_USERNAME=root
+DB_PASSWORD=
 
-## Contributing
+BROADCAST_DRIVER=reverb
+QUEUE_CONNECTION=sync
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+REVERB_APP_ID=your-app-id
+REVERB_APP_KEY=your-app-key
+REVERB_APP_SECRET=your-app-secret
+REVERB_HOST="localhost"
+REVERB_PORT=8080
+REVERB_SCHEME=http
 
-## Code of Conduct
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+If Reverb hasn't been installed/configured yet:
 
-## Security Vulnerabilities
+```bash
+composer require laravel/reverb
+php artisan reverb:install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Database Setup
 
-## License
+```bash
+php artisan migrate:fresh --seed
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This creates:
+- A test user: `test@example.com` / `password`
+- 10 seeded blog posts owned by that user
+
+## Notifications (PHPFlasher)
+
+```bash
+php artisan flasher:install
+```
+
+This publishes the required JS/CSS assets to `public/vendor/flasher`. Assets are auto-injected into every page automatically — no manual `<script>` tags needed.
+
+## Build Frontend Assets
+
+```bash
+npm run build
+```
+
+> **Note:** This project does not use `npm run dev` due to CORS conflicts between the Vite dev server and custom `.test` domains under Laragon. Re-run `npm run build` any time you change a file under `resources/js/`.
+
+## Running the App
+
+Three processes need to run simultaneously, each in its own terminal:
+
+```bash
+# 1. Your web server (Laragon serves this automatically, or run manually:)
+php artisan serve
+
+# 2. The Reverb WebSocket server
+php artisan reverb:start
+
+# 3. (Only if you change frontend assets)
+npm run build
+```
+
+Then visit your configured domain (e.g. `http://websocket-reverb.test`) or `http://localhost:8000` if using `artisan serve`.
+
+## How Real-Time Comments Work
+
+1. A user submits a comment via `fetch()` on the post page.
+2. The request hits `CommentController@store`, validated by `StoreCommentRequest`.
+3. `CommentRepository@store` creates the comment, then fires the `CommentPosted` event.
+4. `CommentPosted` broadcasts on a **public** channel (`posts.{postId}`) — no channel authorization needed, so guests can listen too.
+5. Laravel Reverb pushes the event to every connected client subscribed to that channel.
+6. `resources/js/comments.js` (loaded via Echo) listens for `.comment.posted` and appends the new comment to the DOM instantly — for every tab/user watching that post, without a page refresh.
+7. `->toOthers()` combined with the `X-Socket-Id` header (sent manually since `fetch()` doesn't attach it automatically like `axios` does) ensures the comment's author doesn't see a duplicate — their own comment renders immediately from the direct API response instead.
+
+## Project Structure (App-Specific)
+
+```
+app/
+  Events/
+    CommentPosted.php          # Broadcast event for new comments
+  Http/
+    Controllers/
+      PostController.php       # Post listing + single post view
+      Api/CommentController.php # Comment endpoints (thin, delegates to repo)
+    Requests/
+      StoreCommentRequest.php  # Validates comment body
+    Resources/
+      CommentResource.php      # Formats comment JSON output
+  Repositories/
+    Interfaces/
+      CommentInterface.php
+    Repositories/
+      CommentRepository.php    # All comment business logic + responses
+  Models/
+    Post.php
+    Comment.php
+
+database/
+  factories/
+    PostFactory.php
+  seeders/
+    PostSeeder.php
+
+resources/
+  js/
+    app.js                     # Entry point, imports bootstrap + comments
+    bootstrap.js                # Axios + Echo/Reverb setup
+    comments.js                  # Fetch comments, listen on Echo channel, submit new comments
+  views/
+    posts/
+      index.blade.php           # All posts listing (clickable cards)
+      show.blade.php             # Single post + live comments
+
+routes/
+  web.php                       # Post pages + comment endpoints (session auth, not routes/api.php)
+```
+
+## Notes on Design Decisions
+
+- **Comment routes live in `routes/web.php`, not `routes/api.php`** — despite returning JSON, they rely on Laravel's session-based auth and CSRF protection (via the `web` middleware group), which `routes/api.php` does not provide by default.
+- **Public (not private) broadcast channel** — required so guests can watch comments live without needing to authenticate against a channel.
+- **`QUEUE_CONNECTION=sync`** — broadcasting events are dispatched through the queue by default; without a queue worker running, `sync` processes them inline immediately, which is simplest for local development.
+
+## Known Limitations
+
+- No post creation/editing UI — posts are seed-only by design for this demo
+- No pagination on the post listing (fine for the current seed size of 10)
+- No rate limiting on comment submission

@@ -10,6 +10,7 @@ class Post extends Model
     use HasFactory;
 
     protected $fillable = ['userId', 'title', 'body'];
+    protected $with = ['user'];
 
     //a post has many commnets
     public function comments()

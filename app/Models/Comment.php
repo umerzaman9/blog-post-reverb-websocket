@@ -10,6 +10,7 @@ class Comment extends Model
     use HasFactory;
 
     protected $fillable = ['postId', 'userId', 'body'];
+    protected $with = ['user'];
 
     //the comment belongs to this user 
     public function user()
