@@ -32,9 +32,16 @@ class CommentPosted implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new Channel('posts.' . $this->comment->postId),
         ];
+
+        // Don't notify the author about their own comment
+        if ($this->comment->post->userId !== $this->comment->userId) {
+            $channels[] = new PrivateChannel('users.' . $this->comment->post->userId);
+        }
+
+        return $channels;
     }
 
     public function broadcastAs()
@@ -49,6 +56,8 @@ class CommentPosted implements ShouldBroadcastNow
             'body'       => $this->comment->body,
             'author'     => $this->comment->user->name,
             'created_at' => $this->comment->created_at->diffForHumans(),
+            'post_id'    => $this->comment->postId,
+            'post_title' => $this->comment->post->title,
         ];
     }
 }

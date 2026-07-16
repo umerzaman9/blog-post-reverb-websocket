@@ -76,7 +76,9 @@
                 </p>
                 @endauth
 
-                <div id="post-data" data-post-id="{{ $post->id }}"></div>
+                {{-- <div id="post-data" data-post-id="{{ $post->id }}"></div> --}}
+                <div id="post-data" data-post-id="{{ $post->id }}" data-user-name="{{ auth()->user()->name ?? '' }}"
+                    data-user-id="{{ auth()->id() }}" data-post-author-id="{{ $post->userId }}"></div>
 
                 <h2 class="h5 mb-3">Comments</h2>
                 <div id="comments" class="d-flex flex-column gap-2 mb-3"></div>

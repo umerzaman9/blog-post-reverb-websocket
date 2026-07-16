@@ -100,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 success: function (res) {
                     renderComment(res.response.data.comment);
                     $('#comment-body').val('');
-                    toastr.success('Comment posted successfully!');
                 },
                 error: function (xhr) {
                     console.error(xhr);
@@ -108,5 +107,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+    }
+
+    //send notification to author for new comment on their post
+    const currentUserId = postEl.dataset.userId;
+    const postAuthorId = postEl.dataset.postAuthorId;
+
+    // Only the post's author should listen for their own notification channel
+    if (currentUserId && currentUserId === postAuthorId) {
+        window.Echo.private(`users.${currentUserId}`)
+            .listen('.comment.posted', (e) => {
+                toastr.info(`${e.author} commented on "${e.post_title}"`);
+            });
     }
 });
