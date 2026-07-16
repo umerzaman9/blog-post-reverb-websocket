@@ -41,6 +41,13 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
 
+                @auth
+                <div class="mb-3">
+                    <span class="text-muted small">Currently viewing:</span>
+                    <span id="viewers"></span>
+                </div>
+                @endauth
+
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
                         <h1 class="card-title h3">{{ $post->title }}</h1>

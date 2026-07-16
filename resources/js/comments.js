@@ -42,6 +42,45 @@ document.addEventListener('DOMContentLoaded', function () {
     window.Echo.channel(`posts.${postId}`)
         .listen('.comment.posted', (e) => renderComment(e));
 
+    //who is viewing post
+    const viewersEl = document.getElementById('viewers');
+    window.Echo.join(`presence-posts.${postId}`)
+        .here((users) => {
+            // Fired once, when you join — gives the full current viewers including self
+            renderViewers(users);
+        })
+        .joining((user) => {
+            // Fired for everyone already in the channel, when someone new joins
+            toastr.info(`${user.name} joined`);
+            addViewer(user);
+        })
+        .leaving((user) => {
+            // Fired when someone leaves (closes tab, navigates away)
+            toastr.info(`${user.name} left`);
+            removeViewer(user);
+        })
+        .error((error) => {
+            console.error('Presence channel error:', error);
+        });
+
+    function renderViewers(users) {
+        viewersEl.innerHTML = '';
+        users.forEach(addViewer);
+    }
+
+    function addViewer(user) {
+        const span = document.createElement('span');
+        span.className = 'badge bg-secondary me-1';
+        span.dataset.userId = user.id;
+        span.textContent = user.name;
+        viewersEl.appendChild(span);
+    }
+
+    function removeViewer(user) {
+        const el = viewersEl.querySelector(`[data-user-id="${user.id}"]`);
+        if (el) el.remove();
+    }
+
     // create a comment
     if (commentForm) {
         commentForm.addEventListener('submit', function (e) {
